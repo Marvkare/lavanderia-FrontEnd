@@ -30,9 +30,10 @@ const LoginForm = () => {
       const response = await axios.post(ApiServerLavanderia+"api/usuario/login", data);
       const token = response.data.token;
       const usuarioData = response.data.usuarioData
+      console.log(usuarioData)
       // Almacenar el token en localStorage
       localStorage.setItem('token', token);
-      localStorage.setItem('usuarioData',usuarioData)
+      localStorage.setItem('usuarioData', JSON.stringify(usuarioData))
       // Configurar interceptor de axios
       
       // Navegar a la ruta /main

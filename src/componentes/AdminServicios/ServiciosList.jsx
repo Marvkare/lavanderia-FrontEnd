@@ -17,6 +17,7 @@ const ServiciosList = () => {
       try {
         const response = await axios.get(`${ApiServerLavanderia}api/servicios`);
         setServicios(response.data);
+        console.log(response.data)
       } catch (error) {
         console.error('Error al obtener los servicios activos:', error);
       }
@@ -52,15 +53,9 @@ const ServiciosList = () => {
       estado_servicio_idestado_servicio: nuevoEstado,
     });
 
-    // Find the new state name based on the selected new state ID
-    const nuevoEstadoNombre = estados.find(e => e.idestado_servicio === parseInt(nuevoEstado))?.nombreEstadoS;
-
-    // Update the service list with the new state name
-    setServicios(servicios.map(servicio =>
-      servicio.idServicio === selectedServicio.idServicio
-        ? { ...servicio, estadoServicio: nuevoEstadoNombre }
-        : servicio
-    ));
+    // Refetch the updated services list
+    const response = await axios.get(`${ApiServerLavanderia}api/servicios`);
+    setServicios(response.data);
 
     handleCloseModal();
   } catch (error) {
@@ -68,21 +63,28 @@ const ServiciosList = () => {
   }
 };
 
+const handleCancelService = async () => {
+  try {
+    const Usuario = JSON.parse(localStorage.getItem('usuarioData'));
+    console.log(razonCancelacion)
+    await axios.post(`${ApiServerLavanderia}api/servicios/cancelar`, {
+      idServicio: selectedServicio.idServicio,
+      usuarioCancelo_idusuario: Usuario.idUsuario,
+      razon_cancelacion: razonCancelacion,
+    });
 
-  const handleCancelService = async () => {
-    try {
-      await axios.post(`${ApiServerLavanderia}api/servicios/cancelar`, {
-        idServicio: selectedServicio.idServicio,
-        razon_cancelacion: razonCancelacion,
-      });
+    // Refetch the updated services list
+    const response = await axios.get(`${ApiServerLavanderia}api/servicios`);
+    setServicios(response.data);
 
-      // Optional: update the services list or handle it as needed
+    handleCloseModal();
+  } catch (error) {
+    console.error('Error al cancelar el servicio:', error);
+  }
+};
 
-      handleCloseModal();
-    } catch (error) {
-      console.error('Error al cancelar el servicio:', error);
-    }
-  };
+
+ 
 
   return (
     <div>
@@ -109,8 +111,13 @@ const ServiciosList = () => {
               <td>{servicio.nombreCliente}</td>
               <td>{servicio.apellidosCliente}</td>
               <td>
-                <Button onClick={() => handleOpenModal(servicio)}>
-                  {servicio.estadoServicio}
+                
+                <Button
+                  onClick={() => handleOpenModal(servicio)}
+                  disabled={servicio.cancelado === 1}
+                  variant={servicio.cancelado === 1 ? 'danger' : 'primary'}
+                >
+                  {servicio.cancelado === 1 ? 'Cancelado' : servicio.estadoServicio}
                 </Button>
               </td>
             </tr>
